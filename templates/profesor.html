@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Du-Ra | Panel profesor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="teacher-panel">
+        <div class="brand-bar mb-4">
+          <span class="brand-mark">Du/ra</span>
+          <a class="teacher-link" href="{{ url_for('index') }}">Vista alumno</a>
+        </div>
+
+        <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3 mb-4">
+          <div>
+            <p class="eyebrow mb-2">Panel del profesor</p>
+            <h1 class="page-title mb-1">Dudas de la clase</h1>
+            <p class="text-secondary mb-0">Revisa dudas anonimas y detecta que tema conviene reforzar.</p>
+          </div>
+          <div class="stat-card">
+            <span>Total de dudas</span>
+            <strong>{{ total_dudas }}</strong>
+          </div>
+        </div>
+
+        <div class="action-row mb-4">
+          <form method="post">
+            <input type="hidden" name="accion" value="analizar">
+            <button type="submit" class="btn btn-primary" {% if total_dudas == 0 %}disabled{% endif %}>
+              Analizar dudas con IA
+            </button>
+          </form>
+          <form method="post">
+            <input type="hidden" name="accion" value="limpiar">
+            <button type="submit" class="btn btn-outline-danger" {% if total_dudas == 0 and not analisis %}disabled{% endif %}>
+              Limpiar dudas de la clase
+            </button>
+          </form>
+        </div>
+
+        {% if mensaje %}
+          <div class="alert alert-success" role="alert">{{ mensaje }}</div>
+        {% endif %}
+
+        {% if error %}
+          <div class="alert alert-warning" role="alert">{{ error }}</div>
+        {% endif %}
+
+        {% if analisis %}
+          <div class="analysis-grid mb-4">
+            <div class="card app-card">
+              <div class="card-body p-4">
+                <div class="d-flex justify-content-between gap-3 flex-wrap mb-2">
+                  <p class="section-label mb-0">Tema con mas dudas</p>
+                  <span class="source-badge {% if analisis.origen == 'ia' %}source-ai{% else %}source-local{% endif %}">
+                    {{ analisis.origen_mensaje }}
+                  </span>
+                </div>
+                <h2 class="topic-title">{{ analisis.tema_mas_confuso }}</h2>
+                <p class="text-secondary mb-0">{{ analisis.resumen }}</p>
+              </div>
+            </div>
+
+            <div class="card app-card">
+              <div class="card-body p-4">
+                <p class="section-label">Sugerencia para explicar</p>
+                <p class="mb-0">{{ analisis.sugerencia_profesor }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4 mb-4">
+            <div class="col-lg-5">
+              <div class="card app-card h-100">
+                <div class="card-body p-4">
+                  <p class="section-label">Preguntas guia</p>
+                  <ul class="clean-list">
+                    {% for pregunta in analisis.preguntas_guia %}
+                      <li>{{ pregunta }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-7">
+              <div class="card app-card h-100">
+                <div class="card-body p-4">
+                  <p class="section-label">Temas detectados</p>
+                  <div class="table-responsive">
+                    <table class="table align-middle">
+                      <thead>
+                        <tr>
+                          <th>Tema</th>
+                          <th class="text-end">Cantidad</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for tema in analisis.temas_detectados %}
+                          <tr>
+                            <td>{{ tema.tema }}</td>
+                            <td class="text-end fw-semibold">{{ tema.cantidad }}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card app-card mb-4">
+            <div class="card-body p-4">
+              <p class="section-label">Dudas relacionadas por tema</p>
+              <div class="accordion" id="temasAccordion">
+                {% for tema in analisis.temas_detectados %}
+                  <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#tema-{{ loop.index }}">
+                        {{ tema.tema }} · {{ tema.cantidad }} duda{% if tema.cantidad != 1 %}s{% endif %}
+                      </button>
+                    </h2>
+                    <div id="tema-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" data-bs-parent="#temasAccordion">
+                      <div class="accordion-body">
+                        <ul class="clean-list mb-0">
+                          {% for duda in tema.dudas_relacionadas %}
+                            <li>{{ duda }}</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="card app-card">
+          <div class="card-body p-4">
+            <p class="section-label">Lista de dudas recibidas</p>
+            {% if dudas %}
+              <div class="list-group list-group-flush">
+                {% for duda in dudas %}
+                  <div class="list-group-item px-0">
+                    <div class="d-flex justify-content-between gap-3 flex-wrap">
+                      <strong>Duda #{{ duda.id }}</strong>
+                      <span class="text-secondary small">{{ duda.fecha_hora }}</span>
+                    </div>
+                    <p class="mb-0 mt-2">{{ duda.texto }}</p>
+                    <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mt-3">
+                      {% if duda.solucion %}
+                        <span class="source-badge {% if duda.origen_solucion == 'ia' %}source-ai{% else %}source-local{% endif %}">
+                          {{ mensaje_origen(duda.origen_solucion) }}
+                        </span>
+                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('detalle_duda', duda_id=duda.id) }}">
+                          Ver solucion
+                        </a>
+                      {% else %}
+                        <span class="text-secondary small">Sin solucion generada todavia.</span>
+                        <a class="btn btn-sm btn-primary" href="{{ url_for('detalle_duda', duda_id=duda.id) }}">
+                          Generar solucion
+                        </a>
+                      {% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="empty-state mb-0">Aun no hay dudas recibidas en esta sesion.</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

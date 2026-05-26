@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Du-Ra | Dudas anonimas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="student-panel">
+        <div class="brand-bar">
+          <span class="brand-mark">Du-Ra</span>
+          <a class="teacher-link" href="{{ url_for('profesor') }}">Panel profesor</a>
+        </div>
+
+        <div class="row g-4 align-items-center">
+          <div class="col-lg-5">
+            <p class="eyebrow mb-2">Clase en vivo</p>
+            <h1 class="page-title">Envia tu duda de forma anonima</h1>
+            <p class="lead text-secondary">
+              Escribe lo que no quedo claro. El profesor vera los temas mas repetidos
+              sin identificar a ningun alumno.
+            </p>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card app-card">
+              <div class="card-body p-4">
+                {% if mensaje %}
+                  <div class="alert alert-success" role="alert">{{ mensaje }}</div>
+                {% endif %}
+
+                {% if error %}
+                  <div class="alert alert-danger" role="alert">{{ error }}</div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                  <label for="duda" class="form-label fw-semibold">Tu duda</label>
+                  <textarea
+                    class="form-control"
+                    id="duda"
+                    name="duda"
+                    rows="7"
+                    minlength="5"
+                    maxlength="500"
+                    placeholder="Ejemplo: No entendi como calcular hosts utiles en /26"
+                    required
+                  ></textarea>
+                  <div class="form-text">Minimo 5 caracteres. Maximo 500.</div>
+                  <button type="submit" class="btn btn-primary mt-3">Enviar duda</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
