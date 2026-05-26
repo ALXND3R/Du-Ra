@@ -19,7 +19,7 @@ Du-Ra es una aplicacion web para clases donde los alumnos envian dudas anonimas 
 ## Instalacion
 
 ```bash
-cd dura
+cd Du-Ra
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
